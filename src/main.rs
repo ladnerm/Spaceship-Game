@@ -379,7 +379,7 @@ pub fn spawn_fireball_over_time(
                     custom_size: Some(Vec2::new(fireball_size, fireball_size)),
                     ..default()
                 },
-                transform: Transform::from_xyz(fireball_pos1, 140.0, 0.0),
+                transform: Transform::from_xyz(fireball_pos1, 140.0, 1.0),
                 ..default()
             },
         ))
@@ -399,7 +399,7 @@ pub fn spawn_fireball_over_time(
                     custom_size: Some(Vec2::new(fireball_size, fireball_size)),
                     ..default()
                 },
-                transform: Transform::from_xyz(fireball_pos2, 140.0, 0.0),
+                transform: Transform::from_xyz(fireball_pos2, 140.0, 1.0),
                 ..default()
             },
         ))
