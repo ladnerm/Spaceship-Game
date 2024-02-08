@@ -16,7 +16,10 @@ pub enum GameState {
 }
 
 #[derive(Component)]
-struct MenuItems();
+struct MenuComponents();
+
+#[derive(Component)]
+struct PlayingComponents();
 
 fn setup_menu(mut commands: Commands) {
     
@@ -28,7 +31,7 @@ fn setup_menu(mut commands: Commands) {
     };
 
     commands.spawn(start_camera)
-    .insert(MenuItems());
+    .insert(MenuComponents());
 
     commands.spawn(TextBundle::from_section(
         "Press Space to Begin",
@@ -45,13 +48,13 @@ fn setup_menu(mut commands: Commands) {
             ..default()
         })
     )
-    .insert(MenuItems());
+    .insert(MenuComponents());
 }
 
 fn state_transition(
     mut game_state: ResMut<NextState<GameState>>,
     keyboard_input: Res<Input<KeyCode>>,
-    menu_items_query: Query<Entity, With<MenuItems>>,
+    menu_items_query: Query<Entity, With<MenuComponents>>,
     mut commands: Commands,
 ) {
     if keyboard_input.just_pressed(KeyCode::Space) {
@@ -83,7 +86,7 @@ fn main() {
         .init_resource::<FireballSpawnTimer>()
         .add_state::<GameState>()
         .insert_resource(ClearColor(Color::rgb(0.0, 0.0, 0.0)))
-        .add_systems(Startup, setup_menu)
+        .add_systems(OnEnter(GameState::StartMenu), setup_menu)
         .add_systems(Update, state_transition)
         .add_systems(OnEnter(GameState::Playing), game_setup)
         .add_systems(Update, (
@@ -109,7 +112,7 @@ fn game_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         min_height: 144.0,
     };
 
-    commands.spawn(camera).insert(MainCamera);
+    commands.spawn(camera).insert(PlayingComponents());
 
     let texture = asset_server.load("spaceship.png");
 
@@ -126,11 +129,9 @@ fn game_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             speed: 80.0,
             score: 0,
         },
-    ));
+    ))
+    .insert(PlayingComponents());
 }
-
-#[derive(Component)]
-pub struct MainCamera;
 
 fn character_movement(
     mut characters: Query<(&mut Transform, &Player)>,
@@ -187,24 +188,29 @@ fn despawn_fireball(
 }
 
 fn check_collision(
-    query_player: Query<(Entity, &Transform), With<Player>>,
+    query_player: Query<&Transform, With<Player>>,
     mut query_player_score: Query<&mut Player>,
     query_fireball: Query<(&Transform, &Fireball), With<Fireball>>,
     query_coin: Query<(Entity, &Transform), With<Coin>>,
     mut commands: Commands,
     asset_server: Res<AssetServer>,
+    mut game_state: ResMut<NextState<GameState>>,
+    playing_items_query: Query<Entity, With<PlayingComponents>>,
 ) {
 
-    for (player_entity, player_transform) in query_player.iter() {
+    for player_transform in query_player.iter() {
         for (fireball_transform, fireball) in query_fireball.iter() {
             let player_position = player_transform;
             let fireball_position = fireball_transform;
             if meteor_is_colliding(player_position, fireball_position, (fireball.fireball_size) as f64) {
-                commands.entity(player_entity).despawn();
                 commands.spawn(AudioBundle {
                     source: asset_server.load("crash.ogg"),
                     ..default()
                 });
+                for playing_items in playing_items_query.iter() {
+                    commands.entity(playing_items).despawn();
+                }
+                game_state.set(GameState::StartMenu);
             }
         }
         for (coin_entity, coin_transform) in query_coin.iter() {
@@ -256,16 +262,16 @@ fn coin_is_colliding(
 fn display_score(
     mut commands: Commands,
     query_player: Query<&mut Player>,
-    query_text: Query<Entity, With<Text>>
+    query_text: Query<Entity, With<Text>>,
 ) {
     let mut score: i8 = 0;
 
-    for text in &mut query_text.iter() {
-        commands.entity(text).despawn();
-    }
-
     for player in &query_player {
         score = player.score;
+    }
+
+    for text_item in query_text.iter() {
+        commands.entity(text_item).despawn();
     }
 
     let string_score = score.to_string();
@@ -289,7 +295,7 @@ fn display_score(
             ..default()
         })
     )
-    .insert(Text());
+    .insert(PlayingComponents());
 
     commands.spawn(TextBundle::from_section(
         string_score,
@@ -366,7 +372,8 @@ pub fn spawn_fireball_over_time(
             fireball_speed: 55.0, 
             rotate_direction: 2.0, 
             fireball_size 
-        });
+        })
+        .insert(PlayingComponents());
 
         fireball_size = rand::thread_rng().gen_range(25..=60) as f32;
 
@@ -385,7 +392,8 @@ pub fn spawn_fireball_over_time(
             fireball_speed: 70.0, 
             rotate_direction: -2.0,
             fireball_size
-        });
+        })
+        .insert(PlayingComponents());
     }
 }
 
@@ -440,7 +448,8 @@ fn spawn_coin_over_time(
                 ..default()
             }
         )
-        .insert( Coin {} );
+        .insert( Coin {} )
+        .insert(PlayingComponents());
     }
 }
 
