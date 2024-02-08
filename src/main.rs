@@ -1,10 +1,67 @@
 use bevy::prelude::*;
-use bevy::render::camera::ScalingMode;
-use rand::Rng;
 
 pub const FIREBALL_SPAWN_TIME: f32 = 1.2;
 pub const COIN_SPAWN_TIME: f32 = 3.0;
 pub const COIN_SIZE: f32 = 10.0;
+
+
+use bevy::render::camera::ScalingMode;
+use rand::Rng;
+
+#[derive(States, Debug, Hash, PartialEq, Eq, Clone, Default)]
+pub enum GameState {
+    #[default]
+    StartMenu,
+    Playing,
+}
+
+#[derive(Component)]
+struct MenuItems();
+
+fn setup_menu(mut commands: Commands) {
+    
+    let mut start_camera = Camera2dBundle::default();
+
+    start_camera.projection.scaling_mode = ScalingMode::AutoMin {
+        min_width: 256.0,
+        min_height: 144.0,
+    };
+
+    commands.spawn(start_camera)
+    .insert(MenuItems());
+
+    commands.spawn(TextBundle::from_section(
+        "Press Space to Begin",
+        TextStyle {
+            font_size: 30.0,
+            ..default()
+        },
+
+    )
+    .with_style(Style {
+            position_type: PositionType::Absolute,
+            bottom: Val::Px(100.0),
+            right: Val::Px(100.0),
+            ..default()
+        })
+    )
+    .insert(MenuItems());
+}
+
+fn state_transition(
+    mut game_state: ResMut<NextState<GameState>>,
+    keyboard_input: Res<Input<KeyCode>>,
+    menu_items_query: Query<Entity, With<MenuItems>>,
+    mut commands: Commands,
+) {
+    if keyboard_input.just_pressed(KeyCode::Space) {
+        game_state.set(GameState::Playing);
+        for entity in menu_items_query.iter() {
+            commands.entity(entity).despawn();
+        }
+    }
+    
+}
 
 fn main() {
     App::new()
@@ -24,17 +81,27 @@ fn main() {
         )
         .init_resource::<CoinSpawnTimer>()
         .init_resource::<FireballSpawnTimer>()
+        .add_state::<GameState>()
         .insert_resource(ClearColor(Color::rgb(0.0, 0.0, 0.0)))
-        .add_systems(Startup, setup)
-        .add_systems(Update, character_movement)
-        .add_systems(Update, (spawn_fireball_over_time, tick_fireball_timer))
-        .add_systems(Update, (tick_coin_timer, spawn_coin_over_time))
-        .add_systems(Update, (fireball_movement, rotate_fireball))
-        .add_systems(Update, (despawn_fireball, check_collision))
-                .run();
+        .add_systems(Startup, setup_menu)
+        .add_systems(Update, state_transition)
+        .add_systems(OnEnter(GameState::Playing), game_setup)
+        .add_systems(Update, (
+            character_movement,
+            spawn_fireball_over_time,
+            tick_fireball_timer,
+            tick_coin_timer,
+            spawn_coin_over_time,
+            display_score,
+            fireball_movement,
+            rotate_fireball,
+            despawn_fireball,
+            check_collision
+            ).run_if(in_state(GameState::Playing)))
+        .run();
 }
 
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn game_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     let mut camera = Camera2dBundle::default();
 
     camera.projection.scaling_mode = ScalingMode::AutoMin {
@@ -42,18 +109,28 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         min_height: 144.0,
     };
 
-    commands.spawn(camera);
+    commands.spawn(camera).insert(MainCamera);
 
-    let texture = asset_server.load("character.png");
+    let texture = asset_server.load("spaceship.png");
 
     commands.spawn((
         SpriteBundle {
             texture,
+            sprite: Sprite {
+                    custom_size: Some(Vec2::new(20.0, 18.0)),
+                    ..default()
+            },
             ..default()
         },
-        Player { speed: 80.0},
+        Player { 
+            speed: 80.0,
+            score: 0,
+        },
     ));
 }
+
+#[derive(Component)]
+pub struct MainCamera;
 
 fn character_movement(
     mut characters: Query<(&mut Transform, &Player)>,
@@ -103,7 +180,7 @@ fn despawn_fireball(
     query: Query<(Entity, &Transform), With<Fireball>>,
 ) {
     for (entity, transform) in query.iter() {
-        if transform.translation.y < -90.0 {
+        if transform.translation.y < -120.0 {
             commands.entity(entity).despawn();
         }
     }
@@ -111,6 +188,7 @@ fn despawn_fireball(
 
 fn check_collision(
     query_player: Query<(Entity, &Transform), With<Player>>,
+    mut query_player_score: Query<&mut Player>,
     query_fireball: Query<(&Transform, &Fireball), With<Fireball>>,
     query_coin: Query<(Entity, &Transform), With<Coin>>,
     mut commands: Commands,
@@ -138,6 +216,10 @@ fn check_collision(
                     source: asset_server.load("coinsfx.ogg"),
                     ..default()
                 });
+
+                for mut player_score in &mut query_player_score {
+                    player_score.score+=1;
+                }
             }
         }
     }
@@ -148,7 +230,7 @@ fn meteor_is_colliding(
     position2: &Transform,
     thing_size: f64
 ) -> bool{
-    let distance_threshold = thing_size-(thing_size*0.44);
+    let distance_threshold = thing_size-(thing_size*0.46);
     let p1x = position1.translation.x;
     let p1y = position1.translation.y;
     let p2x = position2.translation.x;
@@ -171,7 +253,69 @@ fn coin_is_colliding(
     (((p1x-p2x)*(p1x-p2x)+(p1y-p2y)*(p1y-p2y)) as f64).sqrt() < distance_threshold
 }
 
-pub fn tick_fireball_timer(mut fireball_spaw_timer: ResMut<FireballSpawnTimer>, time: Res<Time>) {
+fn display_score(
+    mut commands: Commands,
+    query_player: Query<&mut Player>,
+    query_text: Query<Entity, With<Text>>
+) {
+    let mut score: i8 = 0;
+
+    for text in &mut query_text.iter() {
+        commands.entity(text).despawn();
+    }
+
+    for player in &query_player {
+        score = player.score;
+    }
+
+    let string_score = score.to_string();
+
+
+    commands.spawn(TextBundle::from_section(
+        "Score: ",
+        TextStyle {
+            font_size: 20.0,
+
+            ..default()
+        })
+        .with_style( Style {
+            position_type: PositionType::Absolute,
+            margin: UiRect::new(
+                Val::Px(5.0),
+                Val::Px(5.0),
+                Val::Px(5.0),
+                Val::Px(5.0)
+            ),
+            ..default()
+        })
+    )
+    .insert(Text());
+
+    commands.spawn(TextBundle::from_section(
+        string_score,
+        TextStyle {
+            font_size: 20.0,
+
+            ..default()
+        })
+        .with_style( Style {
+            position_type: PositionType::Absolute,
+            margin: UiRect::new(
+                Val::Px(80.0),
+                Val::Px(5.0),
+                Val::Px(5.0),
+                Val::Px(5.0)
+            ),
+            ..default()
+        })
+    )
+    .insert(Text());
+}
+
+pub fn tick_fireball_timer(
+    mut fireball_spaw_timer: ResMut<FireballSpawnTimer>, 
+    time: Res<Time>
+) {
     fireball_spaw_timer.timer.tick(time.delta());
 }
 
@@ -237,21 +381,28 @@ pub fn spawn_fireball_over_time(
                 ..default()
             },
         ))
-        .insert(Fireball { fireball_speed: 70.0, 
+        .insert(Fireball { 
+            fireball_speed: 70.0, 
             rotate_direction: -2.0,
             fireball_size
         });
     }
 }
 
-fn rotate_fireball(time: Res<Time>, mut query: Query<(&Fireball, &mut Transform)>) {
+fn rotate_fireball(
+    time: Res<Time>, 
+    mut query: Query<(&Fireball, &mut Transform)>
+) {
 
     for (fireball, mut transform) in query.iter_mut() {
         transform.rotation *= Quat::from_rotation_z(fireball.rotate_direction * time.delta_seconds());
     }
 }
 
-fn tick_coin_timer(mut coin_spaw_timer: ResMut<CoinSpawnTimer>, time: Res<Time>) {
+fn tick_coin_timer(
+    mut coin_spaw_timer: ResMut<CoinSpawnTimer>, 
+    time: Res<Time>
+) {
     coin_spaw_timer.timer.tick(time.delta());
 }
 
@@ -296,6 +447,7 @@ fn spawn_coin_over_time(
 #[derive(Component)]
 struct Player {
     pub speed: f32,
+    score: i8,
 }
 
 #[derive(Component)]
@@ -327,6 +479,9 @@ impl Default for FireballSpawnTimer {
 pub struct CoinSpawnTimer {
     pub timer: Timer,
 }
+
+#[derive(Component)]
+pub struct Text();
 
 impl Default for CoinSpawnTimer {
     fn default() -> CoinSpawnTimer {
