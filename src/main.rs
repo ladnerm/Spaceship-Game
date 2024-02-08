@@ -21,6 +21,17 @@ struct MenuComponents();
 #[derive(Component)]
 struct PlayingComponents();
 
+#[derive(Component)]
+struct Music;
+
+fn play_music(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.spawn(AudioBundle {
+        source: asset_server.load("WMusic.ogg"),
+        ..default()
+    })
+    .insert(Music);
+}
+
 fn setup_menu(mut commands: Commands) {
     
     let mut start_camera = Camera2dBundle::default();
@@ -86,7 +97,7 @@ fn main() {
         .init_resource::<FireballSpawnTimer>()
         .add_state::<GameState>()
         .insert_resource(ClearColor(Color::rgb(0.0, 0.0, 0.0)))
-        .add_systems(OnEnter(GameState::StartMenu), setup_menu)
+        .add_systems(OnEnter(GameState::StartMenu), (setup_menu, play_music))
         .add_systems(Update, state_transition)
         .add_systems(OnEnter(GameState::Playing), game_setup)
         .add_systems(Update, (
@@ -196,6 +207,7 @@ fn check_collision(
     asset_server: Res<AssetServer>,
     mut game_state: ResMut<NextState<GameState>>,
     playing_items_query: Query<Entity, With<PlayingComponents>>,
+    music_query: Query<Entity, With<Music>>,
 ) {
 
     for player_transform in query_player.iter() {
@@ -209,6 +221,9 @@ fn check_collision(
                 });
                 for playing_items in playing_items_query.iter() {
                     commands.entity(playing_items).despawn();
+                }
+                for music in music_query.iter() {
+                    commands.entity(music).despawn();
                 }
                 game_state.set(GameState::StartMenu);
             }
@@ -236,7 +251,7 @@ fn meteor_is_colliding(
     position2: &Transform,
     thing_size: f64
 ) -> bool{
-    let distance_threshold = thing_size-(thing_size*0.46);
+    let distance_threshold = thing_size-(thing_size*0.44);
     let p1x = position1.translation.x;
     let p1y = position1.translation.y;
     let p2x = position2.translation.x;
