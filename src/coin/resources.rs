@@ -9,7 +9,7 @@ pub struct CoinSpawnTimer {
 
 impl Default for CoinSpawnTimer {
     fn default() -> CoinSpawnTimer {
-        CoinSpawnTimer { 
+        CoinSpawnTimer {
             timer: Timer::from_seconds(COIN_SPAWN_TIME, TimerMode::Repeating),
         }
     }

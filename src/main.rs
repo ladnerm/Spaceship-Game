@@ -1,16 +1,16 @@
 use bevy::prelude::*;
 
 pub mod components;
-mod systems;
 mod events;
+mod systems;
 
-use systems::*;
 use crate::events::GameState;
+use systems::*;
 
-mod player;
 pub mod astroid;
-pub mod score;
 pub mod coin;
+mod player;
+pub mod score;
 
 use astroid::AstroidPlugin;
 use coin::CoinPlugin;
@@ -21,17 +21,17 @@ fn main() {
     App::new()
         .add_plugins(
             DefaultPlugins
-            .set(ImagePlugin::default_nearest())
-            .set(WindowPlugin {
-                primary_window: Some(Window {
-                    title: "Space Game".into(),
-                    resolution: (640.0, 480.0).into(),
-                    resizable: false,
+                .set(ImagePlugin::default_nearest())
+                .set(WindowPlugin {
+                    primary_window: Some(Window {
+                        title: "Space Game".into(),
+                        resolution: (640.0, 480.0).into(),
+                        resizable: false,
+                        ..default()
+                    }),
                     ..default()
-                }),
-                ..default()
-            })
-            .build()
+                })
+                .build(),
         )
         .add_state::<GameState>()
         .insert_resource(ClearColor(Color::rgb(0.0, 0.0, 0.0)))
@@ -44,5 +44,3 @@ fn main() {
         .add_plugins(ScorePlugin)
         .run();
 }
-
-

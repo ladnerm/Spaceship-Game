@@ -9,7 +9,7 @@ pub struct AstroidSpawnTimer {
 
 impl Default for AstroidSpawnTimer {
     fn default() -> AstroidSpawnTimer {
-        AstroidSpawnTimer { 
+        AstroidSpawnTimer {
             timer: Timer::from_seconds(ASTROID_SPAWN_TIME, TimerMode::Repeating),
         }
     }

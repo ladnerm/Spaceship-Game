@@ -1,8 +1,7 @@
 use bevy::prelude::*;
 
-use crate::player::components::Player;
 use crate::components::*;
-
+use crate::player::components::Player;
 
 pub fn display_score(
     mut commands: Commands,
@@ -21,44 +20,39 @@ pub fn display_score(
 
     let string_score = score.to_string();
 
+    commands
+        .spawn(
+            TextBundle::from_section(
+                "Score: ",
+                TextStyle {
+                    font_size: 20.0,
 
-    commands.spawn(TextBundle::from_section(
-        "Score: ",
-        TextStyle {
-            font_size: 20.0,
+                    ..default()
+                },
+            )
+            .with_style(Style {
+                position_type: PositionType::Absolute,
+                margin: UiRect::new(Val::Px(5.0), Val::Px(5.0), Val::Px(5.0), Val::Px(5.0)),
+                ..default()
+            }),
+        )
+        .insert(PlayingComponents);
 
-            ..default()
-        })
-        .with_style( Style {
-            position_type: PositionType::Absolute,
-            margin: UiRect::new(
-                Val::Px(5.0),
-                Val::Px(5.0),
-                Val::Px(5.0),
-                Val::Px(5.0)
-            ),
-            ..default()
-        })
-    )
-    .insert(PlayingComponents);
+    commands
+        .spawn(
+            TextBundle::from_section(
+                string_score,
+                TextStyle {
+                    font_size: 20.0,
 
-    commands.spawn(TextBundle::from_section(
-        string_score,
-        TextStyle {
-            font_size: 20.0,
-
-            ..default()
-        })
-        .with_style( Style {
-            position_type: PositionType::Absolute,
-            margin: UiRect::new(
-                Val::Px(80.0),
-                Val::Px(5.0),
-                Val::Px(5.0),
-                Val::Px(5.0)
-            ),
-            ..default()
-        })
-    )
-    .insert(Texts);
+                    ..default()
+                },
+            )
+            .with_style(Style {
+                position_type: PositionType::Absolute,
+                margin: UiRect::new(Val::Px(80.0), Val::Px(5.0), Val::Px(5.0), Val::Px(5.0)),
+                ..default()
+            }),
+        )
+        .insert(Texts);
 }

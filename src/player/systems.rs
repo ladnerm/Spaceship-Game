@@ -2,39 +2,39 @@ use bevy::prelude::*;
 
 use super::components::*;
 
-use crate::components::*;
 use crate::astroid::components::Astroid;
 use crate::coin::components::Coin;
-use crate::events::GameState;
 use crate::coin::systems::COIN_SIZE;
+use crate::components::*;
+use crate::events::GameState;
 
 pub fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
     let texture = asset_server.load("spaceship.png");
 
-    commands.spawn((
-        SpriteBundle {
-            texture,
-            sprite: Sprite {
+    commands
+        .spawn((
+            SpriteBundle {
+                texture,
+                sprite: Sprite {
                     custom_size: Some(Vec2::new(20.0, 19.0)),
                     ..default()
+                },
+                ..default()
             },
-            ..default()
-        },
-        Player { 
-            speed: 80.0,
-            score: 0,
-        },
-    ))
-    .insert(PlayingComponents);
+            Player {
+                speed: 80.0,
+                score: 0,
+            },
+        ))
+        .insert(PlayingComponents);
 }
 
 pub fn character_movement(
     mut characters: Query<(&mut Transform, &Player)>,
     input: Res<Input<KeyCode>>,
-    time: Res<Time>
-)  {
+    time: Res<Time>,
+) {
     for (mut transform, player) in &mut characters {
-        
         let movement_amount = player.speed * time.delta_seconds();
         if transform.translation.x.abs() < 120.0 && transform.translation.y.abs() < 90.0 {
             if input.pressed(KeyCode::W) {
@@ -72,12 +72,15 @@ pub fn check_collision(
     playing_items_query: Query<Entity, With<PlayingComponents>>,
     music_query: Query<Entity, With<Music>>,
 ) {
-
     for player_transform in query_player.iter() {
         for (astroid_transform, astroid) in query_astroid.iter() {
             let player_position = player_transform;
             let astroid_position = astroid_transform;
-            if player_colliding_with_meteor(player_position, astroid_position, (astroid.astroid_size) as f64) {
+            if player_colliding_with_meteor(
+                player_position,
+                astroid_position,
+                (astroid.astroid_size) as f64,
+            ) {
                 commands.spawn(AudioBundle {
                     source: asset_server.load("crash.ogg"),
                     ..default()
@@ -102,7 +105,7 @@ pub fn check_collision(
                 });
 
                 for mut player_score in &mut query_player_score {
-                    player_score.score+=1;
+                    player_score.score += 1;
                 }
             }
         }
@@ -110,30 +113,29 @@ pub fn check_collision(
 }
 
 pub fn player_colliding_with_meteor(
-    position1: &Transform, 
+    position1: &Transform,
     position2: &Transform,
-    thing_size: f64
-) -> bool{
-    let distance_threshold = thing_size-(thing_size*0.44);
+    thing_size: f64,
+) -> bool {
+    let distance_threshold = thing_size - (thing_size * 0.44);
     let p1x = position1.translation.x;
     let p1y = position1.translation.y;
     let p2x = position2.translation.x;
     let p2y = position2.translation.y;
 
-    (((p1x-p2x)*(p1x-p2x)+(p1y-p2y)*(p1y-p2y)) as f64).sqrt() < distance_threshold
+    (((p1x - p2x) * (p1x - p2x) + (p1y - p2y) * (p1y - p2y)) as f64).sqrt() < distance_threshold
 }
 
 pub fn player_colliding_with_coin(
-    position1: &Transform, 
+    position1: &Transform,
     position2: &Transform,
-    thing_size: f64
-) -> bool{
+    thing_size: f64,
+) -> bool {
     let distance_threshold = thing_size;
     let p1x = position1.translation.x;
     let p1y = position1.translation.y;
     let p2x = position2.translation.x;
     let p2y = position2.translation.y;
 
-    (((p1x-p2x)*(p1x-p2x)+(p1y-p2y)*(p1y-p2y)) as f64).sqrt() < distance_threshold
+    (((p1x - p2x) * (p1x - p2x) + (p1y - p2y) * (p1y - p2y)) as f64).sqrt() < distance_threshold
 }
-
