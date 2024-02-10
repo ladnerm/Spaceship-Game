@@ -25,7 +25,7 @@ pub fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
             score: 0,
         },
     ))
-    .insert(PlayingComponents());
+    .insert(PlayingComponents);
 }
 
 pub fn character_movement(

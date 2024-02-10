@@ -48,7 +48,7 @@ pub fn spawn_coin_over_time(
                 ..default()
             }
         )
-        .insert( Coin {} )
-        .insert(PlayingComponents());
+        .insert(Coin)
+        .insert(PlayingComponents);
     }
 }

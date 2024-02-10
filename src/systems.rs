@@ -22,7 +22,7 @@ pub fn setup_menu(mut commands: Commands) {
     };
 
     commands.spawn(start_camera)
-    .insert(MenuComponents());
+    .insert(MenuComponents);
 
     commands.spawn(TextBundle::from_section(
         "Press Space to Begin",
@@ -38,7 +38,7 @@ pub fn setup_menu(mut commands: Commands) {
             ..default()
         })
     )
-    .insert(MenuComponents());
+    .insert(MenuComponents);
 }
 
 pub fn state_transition(
@@ -64,5 +64,5 @@ pub fn camera_setup(mut commands: Commands) {
         min_height: 144.0,
     };
 
-    commands.spawn(camera).insert(PlayingComponents());
+    commands.spawn(camera).insert(PlayingComponents);
 }

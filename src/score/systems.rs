@@ -40,7 +40,7 @@ pub fn display_score(
             ..default()
         })
     )
-    .insert(PlayingComponents());
+    .insert(PlayingComponents);
 
     commands.spawn(TextBundle::from_section(
         string_score,
@@ -60,5 +60,5 @@ pub fn display_score(
             ..default()
         })
     )
-    .insert(Texts());
+    .insert(Texts);
 }

@@ -44,7 +44,7 @@ pub fn spawn_astroid_over_time(
             rotate_direction: 2.0, 
             astroid_size 
         })
-        .insert(PlayingComponents());
+        .insert(PlayingComponents);
 
         astroid_size = rand::thread_rng().gen_range(25..=60) as f32;
 
@@ -64,7 +64,7 @@ pub fn spawn_astroid_over_time(
             rotate_direction: -2.0,
             astroid_size
         })
-        .insert(PlayingComponents());
+        .insert(PlayingComponents);
     }
 }
 
