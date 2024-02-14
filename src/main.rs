@@ -36,6 +36,7 @@ fn main() {
         .add_state::<GameState>()
         .insert_resource(ClearColor(Color::rgb(0.0, 0.0, 0.0)))
         .add_systems(OnEnter(GameState::StartMenu), (setup_menu, play_music))
+        .add_systems(OnEnter(GameState::Menu), (setup_menu, play_music))
         .add_systems(Update, state_transition)
         .add_systems(OnEnter(GameState::Playing), camera_setup)
         .add_plugins(PlayerPlugin)
