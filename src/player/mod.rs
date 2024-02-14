@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 
 pub mod components;
-pub mod systems;
 mod resources;
+pub mod systems;
 
 use crate::astroid::resources::AstroidSpawnTimer;
 use crate::events::GameState;
@@ -19,7 +19,8 @@ impl Plugin for PlayerPlugin {
             .add_systems(OnEnter(GameState::Menu), display_player_high_score)
             .add_systems(
                 Update,
-                (character_movement, check_collision, update_high_score).run_if(in_state(GameState::Playing)),
+                (character_movement, check_collision, update_high_score)
+                    .run_if(in_state(GameState::Playing)),
             );
     }
 }

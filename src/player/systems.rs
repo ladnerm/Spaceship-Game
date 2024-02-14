@@ -36,7 +36,6 @@ pub fn update_high_score(player_query: Query<&Player>, mut high_score: ResMut<Hi
             high_score.score = player.score;
         }
     }
-    
 }
 
 pub fn display_player_high_score(mut commands: Commands, high_score: Res<HighScore>) {
@@ -59,21 +58,20 @@ pub fn display_player_high_score(mut commands: Commands, high_score: Res<HighSco
         )
         .insert(HighScoreText);
 
-    commands
-        .spawn(
-            TextBundle::from_section(
-                "High Score:",
-                TextStyle {
-                    font_size: 20.0,
-                    ..default()
-                },
-            )
-            .with_style(Style {
-                position_type: PositionType::Absolute,
-                margin: UiRect::new(Val::Px(5.0), Val::Px(0.0), Val::Px(30.0), Val::Px(5.0)),
+    commands.spawn(
+        TextBundle::from_section(
+            "High Score:",
+            TextStyle {
+                font_size: 20.0,
                 ..default()
-            }),
-        ); 
+            },
+        )
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            margin: UiRect::new(Val::Px(5.0), Val::Px(0.0), Val::Px(30.0), Val::Px(5.0)),
+            ..default()
+        }),
+    );
 }
 
 pub fn character_movement(
