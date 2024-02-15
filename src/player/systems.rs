@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 
 use super::components::*;
-use super::resources::*;
 
 use crate::astroid::components::Astroid;
 use crate::coin::components::Coin;
@@ -28,50 +27,6 @@ pub fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
             },
         ))
         .insert(PlayingComponents);
-}
-
-pub fn update_high_score(player_query: Query<&Player>, mut high_score: ResMut<HighScore>) {
-    for player in &player_query {
-        if player.score > high_score.score {
-            high_score.score = player.score;
-        }
-    }
-}
-
-pub fn display_player_high_score(mut commands: Commands, high_score: Res<HighScore>) {
-    let high_score_string = high_score.score.to_string();
-
-    commands
-        .spawn(
-            TextBundle::from_section(
-                high_score_string,
-                TextStyle {
-                    font_size: 20.0,
-                    ..default()
-                },
-            )
-            .with_style(Style {
-                position_type: PositionType::Absolute,
-                margin: UiRect::new(Val::Px(118.0), Val::Px(0.0), Val::Px(31.0), Val::Px(5.0)),
-                ..default()
-            }),
-        )
-        .insert(HighScoreText);
-
-    commands.spawn(
-        TextBundle::from_section(
-            "High Score:",
-            TextStyle {
-                font_size: 20.0,
-                ..default()
-            },
-        )
-        .with_style(Style {
-            position_type: PositionType::Absolute,
-            margin: UiRect::new(Val::Px(5.0), Val::Px(0.0), Val::Px(30.0), Val::Px(5.0)),
-            ..default()
-        }),
-    );
 }
 
 pub fn character_movement(
