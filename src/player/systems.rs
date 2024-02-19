@@ -61,6 +61,19 @@ pub fn character_movement(
     }
 }
 
+fn despawn_entities_after_astroid_collision(
+    playing_items_query: &Query<Entity, With<PlayingComponents>>,
+    music_query: &Query<Entity, With<Music>>,
+    commands: &mut Commands,
+) {
+    for playing_items in playing_items_query.iter() {
+        commands.entity(playing_items).despawn();
+    }
+    for music in music_query.iter() {
+        commands.entity(music).despawn();
+    }
+}
+
 pub fn check_collision(
     query_player: Query<&Transform, With<Player>>,
     mut query_player_score: Query<&mut Player>,
@@ -71,12 +84,12 @@ pub fn check_collision(
     mut game_state: ResMut<NextState<GameState>>,
     playing_items_query: Query<Entity, With<PlayingComponents>>,
     music_query: Query<Entity, With<Music>>,
-    high_score_query: Query<Entity, With<HighScoreText>>,
 ) {
     for player_transform in query_player.iter() {
         for (astroid_transform, astroid) in query_astroid.iter() {
             let player_position = player_transform;
             let astroid_position = astroid_transform;
+
             if player_colliding_with_meteor(
                 player_position,
                 astroid_position,
@@ -86,21 +99,15 @@ pub fn check_collision(
                     source: asset_server.load("crash.ogg"),
                     ..default()
                 });
-                for high_score_text in high_score_query.iter() {
-                    commands.entity(high_score_text).despawn();
-                }
-                for playing_items in playing_items_query.iter() {
-                    commands.entity(playing_items).despawn();
-                }
-                for music in music_query.iter() {
-                    commands.entity(music).despawn();
-                }
+                
+                despawn_entities_after_astroid_collision(&playing_items_query, &music_query, &mut commands);
                 game_state.set(GameState::Menu);
             }
         }
         for (coin_entity, coin_transform) in query_coin.iter() {
             let player_position = player_transform;
             let coin_position = coin_transform;
+
             if player_colliding_with_coin(player_position, coin_position, COIN_SIZE as f64) {
                 commands.entity(coin_entity).despawn();
                 commands.spawn(AudioBundle {

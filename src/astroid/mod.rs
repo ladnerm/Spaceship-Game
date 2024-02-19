@@ -5,7 +5,7 @@ pub mod resources;
 mod systems;
 
 use crate::astroid::resources::AstroidSpawnTimer;
-use crate::events::GameState;
+use crate::events::*;
 use systems::*;
 
 pub struct AstroidPlugin;

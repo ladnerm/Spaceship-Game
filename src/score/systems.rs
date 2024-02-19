@@ -67,8 +67,16 @@ pub fn update_high_score(player_query: Query<&Player>, mut high_score: ResMut<Hi
     }
 }
 
-pub fn display_high_score(mut commands: Commands, high_score: Res<HighScore>) {
+pub fn display_high_score(
+    mut commands: Commands,
+    high_score: Res<HighScore>,
+    high_score_query: Query<Entity, With<HighScoreText>>,
+) {
     let high_score_string = high_score.score.to_string();
+
+    for high_score_text in high_score_query.iter() {
+        commands.entity(high_score_text).despawn();
+    }
 
     commands
         .spawn(

@@ -40,8 +40,8 @@ fn main() {
         .add_systems(Update, state_transition)
         .add_systems(OnEnter(GameState::Playing), camera_setup)
         .add_plugins(PlayerPlugin)
+        .add_plugins(ScorePlugin)
         .add_plugins(AstroidPlugin)
         .add_plugins(CoinPlugin)
-        .add_plugins(ScorePlugin)
         .run();
 }
